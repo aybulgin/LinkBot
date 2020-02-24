@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 import argparse
-
+from XPATHS import *
 
 SLEEP_SECONDS = 2
 
