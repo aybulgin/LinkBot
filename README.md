@@ -17,12 +17,13 @@ After the installation you can run the script with the following command in the 
 - Keyword (What keyword related profiles you want to search. Ex: founder)
 - Pages (How many pages do you want to look for new connections)
 - Mode
-   MODE 1: Send invites to profiles based on people keyword search  
-   MODE 2: Profile viewer based on on people keyword search  
+  1. MODE 1: Send invites to profiles based on people keyword search  
+  2. MODE 2: Profile viewer based on on people keyword search  
 
 The script will open Firefox and look for people related to your keyword then send them a connection invite.
 
 ## Changelog
+- 0.2.1 - Error handling on connection invites and randomize main actions
 - 0.2 - Added a profile viewer and Mode argument to switch between functions
 - 0.1 - Simple script to send connection invites 
 

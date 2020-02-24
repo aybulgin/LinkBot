@@ -2,10 +2,13 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import ElementClickInterceptedException
 import argparse
+import random
 from XPATHS import *
 
 SLEEP_SECONDS = 2
+RANDOM_PERCENTAGE = 0.3
 
 URL = "https://www.linkedin.com"
 KEYWORD_SEARCH_URL = "https://www.linkedin.com/search/results/people/?keywords="
@@ -13,6 +16,12 @@ KEYWORD_SEARCH_URL = "https://www.linkedin.com/search/results/people/?keywords="
 
 def wait():
 	sleep(SLEEP_SECONDS)
+
+
+#Randomize actions based on predefined percentage
+def should_proceed():
+	if random.random() < RANDOM_PERCENTAGE: return True
+	else: return False
 
 
 def start_login(driver, email, password, keyword):
@@ -34,9 +43,10 @@ def profile_viewer(driver):
 	profile_links = set(driver.find_elements(By.XPATH, XPATH_PROFILE_URL))
 	
 	for profile_link in {link.get_attribute("href") for link in profile_links}:
-		print(f'View: {profile_link}')
-		driver.get(profile_link)
-		wait()
+		if should_proceed():
+			print(f'View: {profile_link}')
+			driver.get(profile_link)
+			wait()
 
 
 #Find all connect buttons and click them and confirm Send Now
@@ -44,10 +54,17 @@ def send_connection_invites(driver):
 	connect_buttons = driver.find_elements(By.XPATH, XPATH_SEARCH_CONNECT_BUTTON)
 
 	for connect in connect_buttons:
-		connect.click()
-		driver.find_element(By.XPATH, XPATH_SEARCH_CONNECT_CONFIRM).click()
-		print('Connection Invite Sent')
-		wait()
+		if should_proceed():
+			try:
+				connect.click()
+				driver.find_element(By.XPATH, XPATH_SEARCH_CONNECT_CONFIRM).click()
+				print('Connection Invite Sent')
+				wait()
+			except ElementClickInterceptedException:
+				#Linkedin may ask for the name of the person
+				#you're sending invite or you receive a message
+				#and we will just skill that for now
+				print("Error: Could not send invite.")
 
 
 #Loads keyword search
@@ -71,6 +88,7 @@ def main(email, password, keyword, pages, mode):
 	start_login(driver, email, password, keyword)
 	keyword_search(driver, keyword, pages, mode)
 
+	driver.close()
 
 if __name__=="__main__":
 	argparser = argparse.ArgumentParser()
