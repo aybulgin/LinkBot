@@ -7,9 +7,10 @@ import argparse
 import random
 from XPATHS import *
 
+
 SLEEP_SECONDS = 2
 RANDOM_PERCENTAGE = 0.3
-
+KILLSWITCH = False#If true we stop sending connection invites
 URL = "https://www.linkedin.com"
 KEYWORD_SEARCH_URL = "https://www.linkedin.com/search/results/people/?keywords="
 
@@ -44,27 +45,32 @@ def profile_viewer(driver):
 	
 	for profile_link in {link.get_attribute("href") for link in profile_links}:
 		if should_proceed():
-			print(f'View: {profile_link}')
+			print(f'[OK] View sent {profile_link}')
 			driver.get(profile_link)
 			wait()
 
 
 #Find all connect buttons and click them and confirm Send Now
 def send_connection_invites(driver):
+	global KILLSWITCH
 	connect_buttons = driver.find_elements(By.XPATH, XPATH_SEARCH_CONNECT_BUTTON)
 
 	for connect in connect_buttons:
 		if should_proceed():
 			try:
 				connect.click()
+				#If you run out of invites we should stop the keyword search loop
+				try:
+					if driver.find_element(By.XPATH, XPATH_CONNECT_LIMIT):
+						KILLSWITCH = True
+				except: pass
 				driver.find_element(By.XPATH, XPATH_SEARCH_CONNECT_CONFIRM).click()
-				print('Connection Invite Sent')
+				print('[OK] Connection Invite Sent')
 				wait()
 			except ElementClickInterceptedException:
 				#Linkedin may ask for the name of the person
 				#you're sending invite or you receive a message
-				#and we will just skill that for now
-				print("Error: Could not send invite.")
+				print("[Error] Could not send invite.")
 
 
 #Loads keyword search
@@ -72,6 +78,10 @@ def keyword_search(driver, keyword, pages, mode):
 	driver.get(f'{KEYWORD_SEARCH_URL}{keyword}')
 
 	for page in range(2, pages + 1):
+		#If we run out of invites or get limited we should stop
+		if KILLSWITCH:
+			print('[INFO] Connection Invite Rate Limit Active.')
+			break
 		#Takes different actions based on MODE
 		if mode == 1:
 			send_connection_invites(driver)
@@ -87,8 +97,9 @@ def main(email, password, keyword, pages, mode):
 
 	start_login(driver, email, password, keyword)
 	keyword_search(driver, keyword, pages, mode)
-
+	print('[DONE]')
 	driver.close()
+
 
 if __name__=="__main__":
 	argparser = argparse.ArgumentParser()
