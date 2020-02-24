@@ -3,11 +3,13 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.webdriver.firefox.options import Options
 import argparse
 import random
 from XPATHS import *
 
 
+HEADLESS = True
 SLEEP_SECONDS = 2
 RANDOM_PERCENTAGE = 0.3
 KILLSWITCH = False#If true we stop sending connection invites
@@ -93,7 +95,13 @@ def keyword_search(driver, keyword, pages, mode):
 
 
 def main(email, password, keyword, pages, mode):
-	driver = webdriver.Firefox(executable_path='geckodriver.exe')
+	#Run browser headless without visible UI
+	if HEADLESS:
+		options = Options()
+		options.headless = True
+		driver = webdriver.Firefox(executable_path='geckodriver.exe', options=options)
+	else: driver = webdriver.Firefox(executable_path='geckodriver.exe')
+	print('[OK] Browser Started')
 
 	start_login(driver, email, password, keyword)
 	keyword_search(driver, keyword, pages, mode)

@@ -23,6 +23,7 @@ After the installation you can run the script with the following command in the 
 The script will open Firefox and look for people related to your keyword then send them a connection invite.
 
 ## Changelog
+- 0.2.3 - Optional headless browser support
 - 0.2.2 - Added stop mechanism to close script when connect rate limited
 - 0.2.1 - Error handling on connection invites and randomize main actions
 - 0.2 - Added a profile viewer and Mode argument to switch between functions
