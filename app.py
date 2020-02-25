@@ -8,6 +8,7 @@ import argparse
 import random
 from XPATHS import *
 from settings import *
+from credentials import *
 
 
 def wait():
@@ -36,18 +37,21 @@ def start_login(driver, email, password, keyword):
 
 #Scrape profile links in current page and visits them
 def profile_viewer(driver):
+	global ACTION_COUNTER
 	profile_links = set(driver.find_elements(By.XPATH, XPATH_PROFILE_URL))
 	
 	for profile_link in {link.get_attribute("href") for link in profile_links}:
 		if should_proceed():
-			print(f'[OK] View sent {profile_link}')
 			driver.get(profile_link)
+			print(f'[OK] View sent {profile_link}')
+			ACTION_COUNTER += 1
 			wait()
 
 
 #Find all connect buttons and click them and confirm Send Now
 def send_connection_invites(driver):
 	global KILLSWITCH
+	global ACTION_COUNTER
 	connect_buttons = driver.find_elements(By.XPATH, XPATH_SEARCH_CONNECT_BUTTON)
 
 	for connect in connect_buttons:
@@ -61,6 +65,7 @@ def send_connection_invites(driver):
 				except: pass
 				driver.find_element(By.XPATH, XPATH_SEARCH_CONNECT_CONFIRM).click()
 				print('[OK] Connection Invite Sent')
+				ACTION_COUNTER += 1
 				wait()
 			except ElementClickInterceptedException:
 				#Linkedin may ask for the name of the person
@@ -71,8 +76,10 @@ def send_connection_invites(driver):
 #Loads keyword search
 def keyword_search(driver, keyword, pages, mode):
 	driver.get(f'{KEYWORD_SEARCH_URL}{keyword}')
+	page = 1 #start counting
 
-	for page in range(2, pages + 1):
+	#We're going to limit the actions based on our limit
+	while (ACTION_COUNTER <= ACTION_LIMIT):
 		#If we run out of invites or get limited we should stop
 		if KILLSWITCH:
 			print('[INFO] Connection Invite Rate Limit Active.')
@@ -84,6 +91,7 @@ def keyword_search(driver, keyword, pages, mode):
 			profile_viewer(driver)
 		else: break
 
+		page += 1 #increment page before moving on
 		driver.get(f'{KEYWORD_SEARCH_URL}{keyword}&page={page}')
 
 
@@ -103,18 +111,11 @@ def main(email, password, keyword, pages, mode):
 
 
 if __name__=="__main__":
-	argparser = argparse.ArgumentParser()
-	argparser.add_argument('email', help = 'Login Email')
-	argparser.add_argument('password', help = 'Login Password')
-	argparser.add_argument('keyword', help = 'Search Keyword')
-	argparser.add_argument('pages', help = 'How many pages to search', type=int)
-	argparser.add_argument('mode', help = 'What mode to run the script on', type=int)
-
-	args = argparser.parse_args()
-	email = args.email
-	password = args.password
-	keyword = args.keyword
-	pages = args.pages
-	mode = args.mode
+	#Get variables from credentials.py and settings.py files
+	email = LOGIN_EMAIL
+	password = LOGIN_PASSWORD
+	keyword = SEARCH_KEYWORD
+	pages = ACTION_LIMIT
+	mode = MODE
 	
 	main(email, password, keyword, pages, mode)
